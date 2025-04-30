@@ -1,5 +1,6 @@
 export const CONFIG = {
   contractAddress: "0x6927648b3114B8B54FA5476Ec3BC3A52f1ab513B" as const,
+  baseUrl: 'https://lotteryneon.vercel.app' as const,
   contractAbi: [
     {
       "inputs": [
