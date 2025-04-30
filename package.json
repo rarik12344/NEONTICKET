@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@farcaster/frame-sdk": "^0.0.37",
+    "@farcaster/frame-sdk": "0.0.37",
     "@metamask/providers": "^10.1.0",
     "ethers": "^5.7.2",
     "next": "13.4.12",
