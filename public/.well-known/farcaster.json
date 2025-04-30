@@ -1,1 +1,45 @@
 
+{
+  "accountAssociation": {
+    "header": "eyJmaWQiOjM2MjEsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHgyY2Q4NWEwOTMyNjFmNTkyNzA4MDRBNkVBNjk3Q2VBNENlQkVjYWZFIn0",
+    "payload": "eyJkb21haW4iOiJuZW9uLXhpLnZlcmNlbC5hcHAifQ==",
+    "signature": "MHgwZmJiYWIwODg3YTU2MDFiNDU3MzVkOTQ5MDRjM2Y1NGUxMzVhZTQxOGEzMWQ5ODNhODAzZmZlYWNlZWMyZDYzNWY4ZTFjYWU4M2NhNTAwOTMzM2FmMTc1NDlmMDY2YTVlOWUwNTljNmZiNDUxMzg0Njk1NzBhODNiNjcyZWJjZTFi"
+  },
+  "frame": {
+    "version": "vNext",
+    "name": "Neon Lottery",
+    "iconUrl": "https://i.ibb.co/rGGxZ9LL/neonlotteryicon.png",
+    "homeUrl": "https://neon-xi.vercel.app/",
+    "imageUrl": "https://i.ibb.co/HfcPqDfC/ogneon.jpg",
+    "buttonTitle": "🎟 Купить билеты",
+    "buttons": [{
+      "label": "Открыть в приложении",
+      "action": "post_redirect"
+    }],
+    "postUrl": "https://neon-xi.vercel.app/api/redirect",
+    "refreshPeriod": 300
+  },
+  "miniapp": {
+    "version": "1",
+    "name": "Neon Lottery",
+    "iconUrl": "https://i.ibb.co/rGGxZ9LL/neonlotteryicon.png",
+    "permissions": ["identity", "wallet", "notifications"],
+    "launchUrl": "https://neon-xi.vercel.app/?miniapp=true",
+    "supportedFrames": true,
+    "chains": [
+      {
+        "id": "0x2105",
+        "name": "Base",
+        "rpcUrl": "https://mainnet.base.org",
+        "iconUrl": "https://i.ibb.co/rRCTNS0L/base.jpg",
+        "currency": "ETH"
+      }
+    ],
+    "theme": {
+      "primaryColor": "#00f3ff",
+      "backgroundColor": "#0f0f1a",
+      "textColor": "#ffffff"
+    },
+    "frameValidationUrl": "https://neon-xi.vercel.app/api/frame"
+  }
+}
