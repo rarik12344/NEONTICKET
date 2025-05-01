@@ -6,14 +6,22 @@ import styles from '../styles/Home.module.css';
 
 declare global {
   interface Window {
-    farcasterMiniApp?: any;
+    farcasterMiniApp?: {
+      ready: () => Promise<void>;
+      connectWallet: (options: { chainId: string; rpcUrl: string }) => Promise<{ address: string }>;
+      ethereum: any;
+      trackEvent: (event: string, data: any) => void;
+      showLoading: (loading: boolean) => void;
+      showNotification: (options: { type: string; message: string; duration: number }) => void;
+      sendTransaction: (tx: any) => Promise<string>;
+    };
     FarcasterFrameSDK?: new () => any;
     ethereum?: any;
   }
 }
 
 export default function Home() {
-  const [web3, setWeb3] = useState<ethers.providers.Web3Provider | null>(null);
+  const [web3, setWeb3] = useState<ethers.providers.Web3Provider | ethers.providers.JsonRpcProvider | null>(null);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [account, setAccount] = useState<string | null>(null);
   const [isMiniApp, setIsMiniApp] = useState(false);
@@ -33,7 +41,6 @@ export default function Home() {
 
   const initializeApp = async () => {
     try {
-      // Check if running in Warpcast MiniApp
       if (typeof window !== 'undefined' && window.farcasterMiniApp) {
         setIsMiniApp(true);
         await initializeMiniApp();
@@ -41,14 +48,12 @@ export default function Home() {
         await initializeWebApp();
       }
 
-      // Initialize Frame SDK
       if (typeof window !== 'undefined' && window.FarcasterFrameSDK) {
         const sdk = new window.FarcasterFrameSDK();
         setFrameSdk(sdk);
         await sdk.actions.ready();
       }
 
-      // Load data
       await updateEthPrice();
       await updateRoundInfo();
     } catch (error) {
@@ -59,17 +64,17 @@ export default function Home() {
 
   const initializeMiniApp = async () => {
     try {
-      await window.farcasterMiniApp.ready();
-      const wallet = await window.farcasterMiniApp.connectWallet({
+      await window.farcasterMiniApp!.ready();
+      const wallet = await window.farcasterMiniApp!.connectWallet({
         chainId: CONFIG.baseChainId,
         rpcUrl: CONFIG.baseRpcUrl
       });
       setAccount(wallet.address);
       
-      const provider = new ethers.providers.Web3Provider(window.farcasterMiniApp.ethereum);
+      const provider = new ethers.providers.Web3Provider(window.farcasterMiniApp!.ethereum);
       setWeb3(provider);
       
-      window.farcasterMiniApp.trackEvent('app_launched', { source: 'miniapp' });
+      window.farcasterMiniApp!.trackEvent('app_launched', { source: 'miniapp' });
       showNotification("Warpcast wallet connected!", "success");
     } catch (error) {
       console.error("MiniApp initialization error:", error);
@@ -108,6 +113,9 @@ export default function Home() {
       }
     } catch (error) {
       console.error("Web3 initialization error:", error);
+      const provider = new ethers.providers.JsonRpcProvider(CONFIG.baseRpcUrl);
+      setWeb3(provider);
+      showNotification("Failed to connect to wallet", "error");
     }
   };
 
@@ -127,12 +135,12 @@ export default function Home() {
     
     try {
       if (isMiniApp) {
-        const wallet = await window.farcasterMiniApp.connectWallet({
+        const wallet = await window.farcasterMiniApp!.connectWallet({
           chainId: CONFIG.baseChainId,
           rpcUrl: CONFIG.baseRpcUrl
         });
         setAccount(wallet.address);
-        window.farcasterMiniApp.trackEvent('wallet_connected', { wallet: wallet.address });
+        window.farcasterMiniApp!.trackEvent('wallet_connected', { wallet: wallet.address });
         showNotification("Warpcast wallet connected!", "success");
       } else if (frameSdk) {
         const accounts = await frameSdk.wallet.ethProvider.request({
@@ -151,14 +159,14 @@ export default function Home() {
 
   const connectMetaMask = async () => {
     try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const accounts = await window.ethereum!.request({ method: 'eth_requestAccounts' });
       setAccount(accounts[0]);
       
       await checkNetwork();
       
       if (!isBaseNetwork()) {
         try {
-          await window.ethereum.request({
+          await window.ethereum!.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: CONFIG.baseChainId }],
           });
@@ -200,7 +208,7 @@ export default function Home() {
 
   const addBaseNetwork = async () => {
     try {
-      await window.ethereum.request({
+      await window.ethereum!.request({
         method: 'wallet_addEthereumChain',
         params: [{
           chainId: CONFIG.baseChainId,
@@ -270,23 +278,23 @@ export default function Home() {
       const costWei = ticketPriceWei.mul(ticketAmount);
       
       if (isMiniApp) {
-        window.farcasterMiniApp.showLoading(true);
+        window.farcasterMiniApp!.showLoading(true);
         
-        const txHash = await window.farcasterMiniApp.sendTransaction({
+        const txHash = await window.farcasterMiniApp!.sendTransaction({
           to: CONFIG.contractAddress,
           value: costWei.toString(),
           data: contract.interface.encodeFunctionData('buyTickets', [ticketAmount]),
           chainId: CONFIG.baseChainId
         });
         
-        window.farcasterMiniApp.trackEvent('tickets_purchased', {
+        window.farcasterMiniApp!.trackEvent('tickets_purchased', {
           ticketAmount,
           costWei: costWei.toString(),
           txHash
         });
         
         showNotification(`Transaction sent: ${txHash.slice(0, 10)}...`, "success");
-        window.farcasterMiniApp.showNotification({
+        window.farcasterMiniApp!.showNotification({
           type: 'success',
           message: `${ticketAmount} ticket${ticketAmount > 1 ? 's' : ''} purchased!`,
           duration: 5000
@@ -303,8 +311,8 @@ export default function Home() {
         });
         
         showNotification(`Transaction sent: ${txHash.slice(0, 10)}...`, "success");
-      } else {
-        const signer = web3!.getSigner();
+      } else if (web3 instanceof ethers.providers.Web3Provider) {
+        const signer = web3.getSigner();
         const tx = await contract.connect(signer).buyTickets(ticketAmount, {
           value: costWei
         });
@@ -326,7 +334,7 @@ export default function Home() {
       showNotification(errorMsg, "error");
     } finally {
       if (isMiniApp) {
-        window.farcasterMiniApp.showLoading(false);
+        window.farcasterMiniApp!.showLoading(false);
       }
     }
   };
@@ -364,7 +372,7 @@ export default function Home() {
     setTimeout(() => setNotification(null), type === 'error' ? 5000 : 3000);
     
     if (isMiniApp) {
-      window.farcasterMiniApp.showNotification({
+      window.farcasterMiniApp!.showNotification({
         type,
         message,
         duration: type === 'error' ? 5000 : 3000
