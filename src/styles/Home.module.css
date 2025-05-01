@@ -122,3 +122,62 @@
   50% { transform: scale(1.05); opacity: 1; }
   100% { transform: scale(1); opacity: 0.9; }
 }
+
+/* Добавьте это в конец home.module.css */
+
+/* WalletButton specific styles */
+.walletButton {
+  composes: button; /* Наследуем базовые стили от .button */
+  position: relative;
+  overflow: hidden;
+}
+
+.walletButton::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0),
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0)
+  );
+  transform: rotate(30deg);
+  animation: shine 3s infinite;
+}
+
+.walletButton.connected {
+  composes: button; /* Наследуем базовые стили */
+  background: var(--neon-green, #00ff88);
+  color: #111;
+}
+
+.walletButton.miniapp {
+  composes: button; /* Наследуем базовые стили */
+  background: var(--neon-purple, #9d00ff);
+  color: white;
+  box-shadow: 0 4px 15px rgba(157, 0, 255, 0.3);
+}
+
+.walletButton:disabled::after {
+  display: none;
+}
+
+/* Анимации (если еще не добавлены) */
+@keyframes shine {
+  0% { transform: rotate(30deg) translate(-30%, -30%); }
+  100% { transform: rotate(30deg) translate(30%, 30%); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
