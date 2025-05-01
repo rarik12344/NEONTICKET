@@ -1,7 +1,7 @@
 // src/hooks/useContract.ts
 import { useState, useEffect } from 'react';
 import { ethers } from 'ethers';
-import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../config';
+import { CONFIG } from '../config';
 
 export const useContract = () => {
   const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
@@ -29,13 +29,18 @@ export const useContract = () => {
 
       // Инициализация контракта
       const contractInstance = new ethers.Contract(
-        CONTRACT_ADDRESS,
-        CONTRACT_ABI,
+        CONFIG.contractAddress,
+        CONFIG.contractAbi,
         web3Signer
       );
       setContract(contractInstance);
 
-      return { provider: web3Provider, signer: web3Signer, contract: contractInstance, account: accounts[0] };
+      return { 
+        provider: web3Provider, 
+        signer: web3Signer, 
+        contract: contractInstance, 
+        account: accounts[0] 
+      };
     } catch (error) {
       console.error("Error connecting wallet:", error);
       throw error;
@@ -50,7 +55,11 @@ export const useContract = () => {
         const accounts = await provider.listAccounts();
         if (accounts.length > 0) {
           const signer = provider.getSigner();
-          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          const contract = new ethers.Contract(
+            CONFIG.contractAddress, 
+            CONFIG.contractAbi, 
+            signer
+          );
           setProvider(provider);
           setSigner(signer);
           setContract(contract);
