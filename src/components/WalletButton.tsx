@@ -1,22 +1,21 @@
-import { useState, useEffect } from 'react';
-import { useWeb3 } from '../hooks/useContract'; // Предполагается, что у вас есть хук для работы с Web3
+// src/components/WalletButton.tsx
+import { useState } from 'react';
+import { useWeb3 } from '../hooks/useContract';
 
 interface WalletButtonProps {
-  onConnect: (account: string) => void;
-  onDisconnect: () => void;
-  account: string | null;
+  onAccountChange: (account: string | null) => void;
 }
 
-export const WalletButton = ({ onConnect, onDisconnect, account }: WalletButtonProps) => {
+export const WalletButton = ({ onAccountChange }: WalletButtonProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
-  const { web3, connectWallet, disconnectWallet } = useWeb3(); // Используем ваш хук для Web3
+  const { account, connectWallet, disconnectWallet } = useWeb3();
 
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
       const accounts = await connectWallet();
       if (accounts && accounts[0]) {
-        onConnect(accounts[0]);
+        onAccountChange(accounts[0]);
       }
     } catch (error) {
       console.error("Error connecting wallet:", error);
@@ -27,7 +26,7 @@ export const WalletButton = ({ onConnect, onDisconnect, account }: WalletButtonP
 
   const handleDisconnect = () => {
     disconnectWallet();
-    onDisconnect();
+    onAccountChange(null);
   };
 
   return (
