@@ -8,8 +8,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       <Head>
         <script 
           src="https://unpkg.com/@farcaster/frame-sdk@0.0.37/dist/frame-sdk.umd.js" 
-          async 
-          data-domain="lotteryneon.vercel.app"
+          async
         />
       </Head>
       <Component {...pageProps} />
