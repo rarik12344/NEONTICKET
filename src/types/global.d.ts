@@ -1,11 +1,14 @@
-import { MetaMaskInpageProvider } from "@metamask/providers";
+interface FarcasterMiniApp {
+  ready: () => Promise<void>;
+  getContext: () => Promise<any>;
+  connectWallet: (options: any) => Promise<any>;
+  // Добавьте другие методы по мере необходимости
+}
 
 declare global {
   interface Window {
-    ethereum?: MetaMaskInpageProvider & {
-      isMetaMask?: boolean;
-      isConnected?: () => boolean;
-      request?: (request: { method: string; params?: any[] }) => Promise<any>;
-    };
+    ethereum?: any;
+    FarcasterFrameSDK?: any;
+    farcasterMiniApp?: FarcasterMiniApp;
   }
 }
