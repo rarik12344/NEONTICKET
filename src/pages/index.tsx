@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import Head from 'next/head'
 import { ethers } from 'ethers'
-import { FarcasterFrameSDK } from '@farcaster/frame-sdk'
+import FarcasterFrameSDK from '@farcaster/frame-sdk'
 import { CONFIG } from '../config'
 import styles from '../styles/Home.module.css'
 
