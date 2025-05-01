@@ -1,4 +1,6 @@
+// src/components/WalletButton.tsx
 import { useState } from 'react';
+import { FaWallet, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 import styles from '../styles/Home.module.css';
 
 interface WalletButtonProps {
@@ -21,16 +23,6 @@ export const WalletButton = ({ account, connectWallet, isMiniApp }: WalletButton
     }
   };
 
-  const getButtonText = () => {
-    if (isConnecting) {
-      return 'Connecting...';
-    }
-    if (account) {
-      return `${account.substring(0, 6)}...${account.substring(38)}`;
-    }
-    return isMiniApp ? 'Connect Warpcast Wallet' : 'Connect Wallet';
-  };
-
   return (
     <button
       onClick={handleConnect}
@@ -41,7 +33,16 @@ export const WalletButton = ({ account, connectWallet, isMiniApp }: WalletButton
       `}
       disabled={isConnecting}
     >
-      {getButtonText()}
+      {isConnecting ? (
+        <FaSpinner className={styles.spin} />
+      ) : account ? (
+        <FaCheckCircle />
+      ) : (
+        <FaWallet />
+      )}
+      {isConnecting ? 'Connecting...' : account ? 
+        `${account.substring(0, 6)}...${account.substring(38)}` : 
+        isMiniApp ? 'Connect Warpcast Wallet' : 'Connect Wallet'}
     </button>
   );
 };
