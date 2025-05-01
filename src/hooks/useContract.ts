@@ -1,55 +1,60 @@
 // src/hooks/useContract.ts
 import { useState, useEffect } from 'react';
-import Web3 from 'web3';
-import { AbiItem } from 'web3-utils';
+import { ethers } from 'ethers';
 import { CONTRACT_ABI, CONTRACT_ADDRESS } from '../config';
 
-export const useWeb3 = () => {
-  const [web3, setWeb3] = useState<Web3 | null>(null);
+export const useContract = () => {
+  const [provider, setProvider] = useState<ethers.providers.Web3Provider | null>(null);
+  const [signer, setSigner] = useState<ethers.Signer | null>(null);
+  const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [account, setAccount] = useState<string | null>(null);
-  const [contract, setContract] = useState<any>(null); // Используйте конкретный тип контракта, если есть
 
   const connectWallet = async () => {
     if (!window.ethereum) {
-      alert('Please install MetaMask!');
-      return [];
+      throw new Error('Please install MetaMask!');
     }
 
     try {
-      const accounts = await window.ethereum.request({ 
-        method: 'eth_requestAccounts' 
-      });
-      
-      const web3Instance = new Web3(window.ethereum);
-      const contractInstance = new web3Instance.eth.Contract(
-        CONTRACT_ABI as AbiItem[],
-        CONTRACT_ADDRESS
-      );
+      // Инициализация провайдера
+      const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+      setProvider(web3Provider);
 
-      setWeb3(web3Instance);
-      setContract(contractInstance);
+      // Запрос доступа к аккаунтам
+      const accounts = await web3Provider.send("eth_requestAccounts", []);
       setAccount(accounts[0]);
-      
-      return accounts;
+
+      // Получаем подписывающего (signer)
+      const web3Signer = web3Provider.getSigner();
+      setSigner(web3Signer);
+
+      // Инициализация контракта
+      const contractInstance = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        CONTRACT_ABI,
+        web3Signer
+      );
+      setContract(contractInstance);
+
+      return { provider: web3Provider, signer: web3Signer, contract: contractInstance, account: accounts[0] };
     } catch (error) {
       console.error("Error connecting wallet:", error);
-      return [];
+      throw error;
     }
-  };
-
-  const disconnectWallet = () => {
-    setAccount(null);
-    setWeb3(null);
-    setContract(null);
   };
 
   // Проверяем подключенный кошелек при загрузке
   useEffect(() => {
     const checkConnectedWallet = async () => {
       if (window.ethereum) {
-        const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const accounts = await provider.listAccounts();
         if (accounts.length > 0) {
-          connectWallet();
+          const signer = provider.getSigner();
+          const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+          setProvider(provider);
+          setSigner(signer);
+          setContract(contract);
+          setAccount(accounts[0]);
         }
       }
     };
@@ -58,10 +63,10 @@ export const useWeb3 = () => {
   }, []);
 
   return {
-    web3,
-    account,
+    provider,
+    signer,
     contract,
+    account,
     connectWallet,
-    disconnectWallet
   };
 };
