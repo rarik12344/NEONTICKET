@@ -1,6 +1,6 @@
-// src/components/WalletButton.tsx
 import { useState } from 'react';
 import { FaWallet, FaCheckCircle, FaSpinner } from 'react-icons/fa';
+import styles from '../styles/Home.module.css';
 
 interface WalletButtonProps {
   account: string | null;
@@ -22,17 +22,11 @@ export const WalletButton = ({ account, connectWallet, isMiniApp }: WalletButton
     }
   };
 
-  const handleDisconnect = () => {
-    // В вашем index.tsx нет метода disconnect, поэтому просто сбрасываем account через connectWallet
-    // Если нужно полноценное отключение, добавьте disconnectWallet в пропсы
-    window.location.reload(); // Простое решение для сброса состояния
-  };
-
   const getButtonText = () => {
     if (isConnecting) {
       return (
         <>
-          <FaSpinner className="spin" /> Connecting...
+          <FaSpinner className={styles.spin} /> Connecting...
         </>
       );
     }
@@ -53,8 +47,12 @@ export const WalletButton = ({ account, connectWallet, isMiniApp }: WalletButton
 
   return (
     <button
-      onClick={account ? handleDisconnect : handleConnect}
-      className={`wallet-button ${account ? 'connected' : ''} ${isMiniApp ? 'miniapp' : ''}`}
+      onClick={handleConnect}
+      className={`
+        ${styles.walletButton}
+        ${account ? styles.connected : ''}
+        ${isMiniApp ? styles.miniapp : ''}
+      `}
       disabled={isConnecting}
     >
       {getButtonText()}
