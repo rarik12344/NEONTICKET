@@ -1,9 +1,11 @@
 import { MetaMaskInpageProvider } from "@metamask/providers";
-import { FarcasterFrameSDK } from "@farcaster/frame-sdk";
 
 declare global {
   interface Window {
-    ethereum?: MetaMaskInpageProvider;
-    FarcasterFrameSDK?: typeof FarcasterFrameSDK;
+    ethereum?: MetaMaskInpageProvider & {
+      isMetaMask?: boolean;
+      isConnected?: () => boolean;
+      request?: (request: { method: string; params?: any[] }) => Promise<any>;
+    };
   }
 }
