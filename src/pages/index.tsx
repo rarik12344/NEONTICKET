@@ -21,7 +21,7 @@ declare global {
 }
 
 export default function Home() {
-  const [web3, setWeb3] = useState<ethers.providers.Web3Provider | ethers.providers.JsonRpcProvider | null>(null);
+  const [web3, setWeb3] = useState<ethers.providers.Web3Provider | null>(null);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [account, setAccount] = useState<string | null>(null);
   const [isMiniApp, setIsMiniApp] = useState(false);
@@ -34,34 +34,47 @@ export default function Home() {
   const [winners, setWinners] = useState<any[]>([]);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
-  // Initialize app
+  // Инициализация приложения (только на клиенте)
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const initializeApp = async () => {
+      try {
+        // Проверяем, запущен ли код в Warpcast MiniApp
+        if (window.farcasterMiniApp) {
+          setIsMiniApp(true);
+          await initializeMiniApp();
+        } else {
+          await initializeWebApp();
+        }
+
+        // Инициализация Farcaster Frame (если есть SDK)
+        if (window.FarcasterFrameSDK) {
+          const sdk = new window.FarcasterFrameSDK();
+          setFrameSdk(sdk);
+          await sdk.actions.ready();
+        }
+
+        await updateEthPrice();
+        await updateRoundInfo();
+      } catch (error) {
+        console.error("Initialization error:", error);
+        showNotification("App initialization failed", "error");
+      }
+    };
+
     initializeApp();
+
+    // Очистка событий при размонтировании
+    return () => {
+      if (window.ethereum) {
+        window.ethereum.removeAllListeners('accountsChanged');
+        window.ethereum.removeAllListeners('chainChanged');
+      }
+    };
   }, []);
 
-  const initializeApp = async () => {
-    try {
-      if (typeof window !== 'undefined' && window.farcasterMiniApp) {
-        setIsMiniApp(true);
-        await initializeMiniApp();
-      } else {
-        await initializeWebApp();
-      }
-
-      if (typeof window !== 'undefined' && window.FarcasterFrameSDK) {
-        const sdk = new window.FarcasterFrameSDK();
-        setFrameSdk(sdk);
-        await sdk.actions.ready();
-      }
-
-      await updateEthPrice();
-      await updateRoundInfo();
-    } catch (error) {
-      console.error("Initialization error:", error);
-      showNotification("App initialization failed", "error");
-    }
-  };
-
+  // Инициализация MiniApp (Warpcast)
   const initializeMiniApp = async () => {
     try {
       await window.farcasterMiniApp!.ready();
@@ -82,9 +95,10 @@ export default function Home() {
     }
   };
 
+  // Инициализация Web3 (MetaMask и другие кошельки)
   const initializeWebApp = async () => {
     try {
-      if (typeof window !== 'undefined' && window.ethereum) {
+      if (window.ethereum) {
         const provider = new ethers.providers.Web3Provider(window.ethereum);
         setWeb3(provider);
         
@@ -119,17 +133,25 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    if (web3) {
-      const lotteryContract = new ethers.Contract(
-        CONFIG.contractAddress,
-        CONFIG.abi,
-        web3
-      );
-      setContract(lotteryContract);
+  // Проверка сети (Base)
+  const checkNetwork = async () => {
+    if (typeof window === 'undefined' || !window.ethereum) return;
+    
+    try {
+      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+      const isBase = (chainId === CONFIG.baseChainId);
+      
+      if (!isBase) {
+        showNotification("Please switch to Base Network", "error");
+      }
+      return isBase;
+    } catch (error) {
+      console.error("Error checking network:", error);
+      return false;
     }
-  }, [web3]);
+  };
 
+  // Подключение кошелька (универсальное для MiniApp и MetaMask)
   const connectWallet = async () => {
     if (!web3) return;
     
@@ -140,16 +162,12 @@ export default function Home() {
           rpcUrl: CONFIG.baseRpcUrl
         });
         setAccount(wallet.address);
-        window.farcasterMiniApp!.trackEvent('wallet_connected', { wallet: wallet.address });
         showNotification("Warpcast wallet connected!", "success");
-      } else if (frameSdk) {
-        const accounts = await frameSdk.wallet.ethProvider.request({
-          method: 'eth_requestAccounts'
-        });
-        setAccount(accounts[0]);
-        showNotification("Wallet connected via Frame", "success");
       } else if (window.ethereum) {
-        await connectMetaMask();
+        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+        setAccount(accounts[0]);
+        await checkNetwork();
+        showNotification("Wallet connected!", "success");
       }
     } catch (error) {
       console.error("Wallet connection error:", error);
@@ -157,119 +175,7 @@ export default function Home() {
     }
   };
 
-  const connectMetaMask = async () => {
-    try {
-      const accounts = await window.ethereum!.request({ method: 'eth_requestAccounts' });
-      setAccount(accounts[0]);
-      
-      await checkNetwork();
-      
-      if (!isBaseNetwork()) {
-        try {
-          await window.ethereum!.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: CONFIG.baseChainId }],
-          });
-        } catch (error: any) {
-          if (error.code === 4902) {
-            await addBaseNetwork();
-          } else {
-            showNotification("Failed to switch to Base Network", "error");
-          }
-        }
-      }
-      
-      showNotification("Wallet connected successfully", "success");
-    } catch (error) {
-      console.error("Error connecting wallet:", error);
-      showNotification("Failed to connect wallet", "error");
-    }
-  };
-
-  const isBaseNetwork = () => {
-    return isMiniApp || 
-           (window.ethereum && window.ethereum.chainId === CONFIG.baseChainId);
-  };
-
-  const checkNetwork = async () => {
-    if (!window.ethereum) return;
-    
-    try {
-      const chainId = await window.ethereum.request({ method: 'eth_chainId' });
-      const isBase = (chainId === CONFIG.baseChainId);
-      
-      if (!isBase) {
-        showNotification("Please switch to Base Network", "error");
-      }
-    } catch (error) {
-      console.error("Error checking network:", error);
-    }
-  };
-
-  const addBaseNetwork = async () => {
-    try {
-      await window.ethereum!.request({
-        method: 'wallet_addEthereumChain',
-        params: [{
-          chainId: CONFIG.baseChainId,
-          chainName: 'Base Mainnet',
-          nativeCurrency: {
-            name: 'Ether',
-            symbol: CONFIG.currencySymbol,
-            decimals: 18
-          },
-          rpcUrls: [CONFIG.baseRpcUrl],
-          blockExplorerUrls: [CONFIG.baseExplorerUrl]
-        }],
-      });
-    } catch (error) {
-      console.error("Error adding Base network:", error);
-      showNotification("Failed to add Base Network", "error");
-    }
-  };
-
-  const updateRoundInfo = async () => {
-    if (!contract) return;
-    
-    try {
-      const roundInfo = await contract.getCurrentRoundInfo();
-      const currentRoundIndex = await contract.currentRoundIndex();
-      const round = await contract.rounds(currentRoundIndex);
-      
-      setCurrentRound({
-        endTime: roundInfo.endTime.toNumber(),
-        prizePool: roundInfo.prizePool.toString(),
-        participantsCount: roundInfo.participantsCount.toNumber(),
-        isActive: roundInfo.active,
-        isCanceled: roundInfo.canceled,
-        ticketPrice: await contract.ticketPriceETH()
-      });
-      
-      if (account) {
-        let tickets = 0;
-        for (let i = 0; i < roundInfo.participantsCount.toNumber(); i++) {
-          const participant = await contract.getParticipantInfo(currentRoundIndex, i);
-          if (participant.wallet.toLowerCase() === account.toLowerCase()) {
-            tickets += participant.tickets.toNumber();
-          }
-        }
-        setUserTickets(tickets);
-      }
-    } catch (error) {
-      console.error("Error updating round info:", error);
-    }
-  };
-
-  const updateEthPrice = async () => {
-    try {
-      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
-      const data = await response.json();
-      setEthPrice(data.ethereum.usd);
-    } catch (error) {
-      console.error("Failed to fetch ETH price:", error);
-    }
-  };
-
+  // Покупка билетов
   const buyTickets = async () => {
     if (!contract || !account) return;
     
@@ -279,59 +185,25 @@ export default function Home() {
       
       if (isMiniApp) {
         window.farcasterMiniApp!.showLoading(true);
-        
         const txHash = await window.farcasterMiniApp!.sendTransaction({
           to: CONFIG.contractAddress,
           value: costWei.toString(),
           data: contract.interface.encodeFunctionData('buyTickets', [ticketAmount]),
           chainId: CONFIG.baseChainId
         });
-        
-        window.farcasterMiniApp!.trackEvent('tickets_purchased', {
-          ticketAmount,
-          costWei: costWei.toString(),
-          txHash
-        });
-        
-        showNotification(`Transaction sent: ${txHash.slice(0, 10)}...`, "success");
-        window.farcasterMiniApp!.showNotification({
-          type: 'success',
-          message: `${ticketAmount} ticket${ticketAmount > 1 ? 's' : ''} purchased!`,
-          duration: 5000
-        });
-      } else if (frameSdk) {
-        const txHash = await frameSdk.wallet.ethProvider.request({
-          method: 'eth_sendTransaction',
-          params: [{
-            to: CONFIG.contractAddress,
-            value: costWei.toString(),
-            data: contract.interface.encodeFunctionData('buyTickets', [ticketAmount]),
-            chainId: parseInt(CONFIG.baseChainId, 16)
-          }]
-        });
-        
-        showNotification(`Transaction sent: ${txHash.slice(0, 10)}...`, "success");
-      } else if (web3 instanceof ethers.providers.Web3Provider) {
+        showNotification(`Tickets purchased! TX: ${txHash.slice(0, 10)}...`, "success");
+      } else if (window.ethereum) {
         const signer = web3.getSigner();
-        const tx = await contract.connect(signer).buyTickets(ticketAmount, {
-          value: costWei
-        });
-        
+        const tx = await contract.connect(signer).buyTickets(ticketAmount, { value: costWei });
         await tx.wait();
-        showNotification(
-          `🎉 ${ticketAmount} ticket${ticketAmount > 1 ? 's' : ''} purchased!`,
-          "success"
-        );
+        showNotification(`🎉 ${ticketAmount} ticket${ticketAmount > 1 ? 's' : ''} purchased!`, "success");
       }
       
       setShowModal(null);
-      updateRoundInfo();
+      await updateRoundInfo();
     } catch (error) {
       console.error("Error buying tickets:", error);
-      let errorMsg = "Failed to buy tickets";
-      if ((error as any).message.includes("rejected")) errorMsg = "Transaction rejected";
-      if ((error as any).message.includes("insufficient funds")) errorMsg = "Insufficient funds";
-      showNotification(errorMsg, "error");
+      showNotification("Failed to buy tickets", "error");
     } finally {
       if (isMiniApp) {
         window.farcasterMiniApp!.showLoading(false);
@@ -339,46 +211,36 @@ export default function Home() {
     }
   };
 
-  const loadWinners = async () => {
+  // Обновление информации о раунде
+  const updateRoundInfo = async () => {
     if (!contract) return;
     
     try {
-      const currentRoundIndex = (await contract.currentRoundIndex()).toNumber();
-      const winnersList = [];
-      
-      const roundsToShow = Math.min(currentRoundIndex, 10);
-      
-      for (let i = currentRoundIndex - 1; i >= Math.max(0, currentRoundIndex - roundsToShow); i--) {
-        const round = await contract.rounds(i);
-        
-        if (round.winner !== ethers.constants.AddressZero) {
-          winnersList.push({
-            roundIndex: i,
-            winner: round.winner,
-            prizeAmount: round.prizeAmount.toString(),
-            endTime: round.endTime.toNumber()
-          });
-        }
-      }
-      
-      setWinners(winnersList);
+      const roundInfo = await contract.getCurrentRoundInfo();
+      setCurrentRound({
+        endTime: roundInfo.endTime.toNumber(),
+        prizePool: ethers.utils.formatEther(roundInfo.prizePool),
+        ticketPrice: ethers.utils.formatEther(await contract.ticketPriceETH())
+      });
     } catch (error) {
-      console.error("Error loading winners:", error);
+      console.error("Error updating round info:", error);
     }
   };
 
+  // Уведомления
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
-    setTimeout(() => setNotification(null), type === 'error' ? 5000 : 3000);
+    setTimeout(() => setNotification(null), 3000);
     
     if (isMiniApp) {
       window.farcasterMiniApp!.showNotification({
         type,
         message,
-        duration: type === 'error' ? 5000 : 3000
+        duration: 3000
       });
     }
   };
+
 
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
