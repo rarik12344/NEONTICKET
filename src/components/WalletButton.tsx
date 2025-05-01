@@ -1,52 +1,63 @@
 // src/components/WalletButton.tsx
 import { useState } from 'react';
-import { useWeb3 } from '../hooks/useContract';
+import { FaWallet, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 
 interface WalletButtonProps {
-  onAccountChange: (account: string | null) => void;
+  account: string | null;
+  connectWallet: () => Promise<void>;
+  isMiniApp: boolean;
 }
 
-export const WalletButton = ({ onAccountChange }: WalletButtonProps) => {
+export const WalletButton = ({ account, connectWallet, isMiniApp }: WalletButtonProps) => {
   const [isConnecting, setIsConnecting] = useState(false);
-  const { account, connectWallet, disconnectWallet } = useWeb3();
 
   const handleConnect = async () => {
     setIsConnecting(true);
     try {
-      const accounts = await connectWallet();
-      if (accounts && accounts[0]) {
-        onAccountChange(accounts[0]);
-      }
+      await connectWallet();
     } catch (error) {
-      console.error("Error connecting wallet:", error);
+      console.error("Connection error:", error);
     } finally {
       setIsConnecting(false);
     }
   };
 
   const handleDisconnect = () => {
-    disconnectWallet();
-    onAccountChange(null);
+    // В вашем index.tsx нет метода disconnect, поэтому просто сбрасываем account через connectWallet
+    // Если нужно полноценное отключение, добавьте disconnectWallet в пропсы
+    window.location.reload(); // Простое решение для сброса состояния
+  };
+
+  const getButtonText = () => {
+    if (isConnecting) {
+      return (
+        <>
+          <FaSpinner className="spin" /> Connecting...
+        </>
+      );
+    }
+    if (account) {
+      const shortAddress = `${account.substring(0, 6)}...${account.substring(38)}`;
+      return (
+        <>
+          <FaCheckCircle /> {shortAddress}
+        </>
+      );
+    }
+    return (
+      <>
+        <FaWallet /> {isMiniApp ? 'Connect Warpcast Wallet' : 'Connect Wallet'}
+      </>
+    );
   };
 
   return (
     <button
       onClick={account ? handleDisconnect : handleConnect}
-      className={`btn ${account ? 'wallet-connected' : ''}`}
+      className={`wallet-button ${account ? 'connected' : ''} ${isMiniApp ? 'miniapp' : ''}`}
       disabled={isConnecting}
     >
-      {isConnecting ? (
-        <i className="fas fa-spinner fa-spin"></i>
-      ) : account ? (
-        <>
-          <i className="fas fa-check-circle"></i> 
-          {`${account.substring(0, 6)}...${account.substring(38)}`}
-        </>
-      ) : (
-        <>
-          <i className="fas fa-wallet"></i> Connect Wallet
-        </>
-      )}
+      {getButtonText()}
     </button>
   );
 };
