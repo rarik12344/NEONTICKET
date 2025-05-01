@@ -6,9 +6,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
     // Обработка POST-запроса от Frame
     const { untrustedData } = req.body
     
-    // Здесь можно добавить логику обработки действий пользователя
-    // Например, покупку билетов или другие взаимодействия
-    
     res.status(200).json({
       type: 'frame',
       frame: {
