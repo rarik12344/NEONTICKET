@@ -427,7 +427,6 @@ export const CONFIG = {
   defaultGasPrice: 0.2,
   gasLimitBuffer: 1.2,
   defaultGasLimit: 200000,
-  ethPriceUSD: 3000,
   frameVersion: 'vNext' as const
 };
 
