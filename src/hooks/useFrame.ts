@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { FarcasterFrameSDK } from "@farcaster/frame-sdk";
 
 export const useFrame = () => {
-  const [frameSdk, setFrameSdk] = useState<FarcasterFrameSDK | null>(null);
+  const [frameSdk, setFrameSdk] = useState<any>(null);
   const [frameContext, setFrameContext] = useState<any>(null);
   const [isMiniApp, setIsMiniApp] = useState(false);
 
