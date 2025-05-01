@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { FaWallet, FaCheckCircle, FaSpinner } from 'react-icons/fa';
 import styles from '../styles/Home.module.css';
 
 interface WalletButtonProps {
@@ -24,25 +23,12 @@ export const WalletButton = ({ account, connectWallet, isMiniApp }: WalletButton
 
   const getButtonText = () => {
     if (isConnecting) {
-      return (
-        <>
-          <FaSpinner className={styles.spin} /> Connecting...
-        </>
-      );
+      return 'Connecting...';
     }
     if (account) {
-      const shortAddress = `${account.substring(0, 6)}...${account.substring(38)}`;
-      return (
-        <>
-          <FaCheckCircle /> {shortAddress}
-        </>
-      );
+      return `${account.substring(0, 6)}...${account.substring(38)}`;
     }
-    return (
-      <>
-        <FaWallet /> {isMiniApp ? 'Connect Warpcast Wallet' : 'Connect Wallet'}
-      </>
-    );
+    return isMiniApp ? 'Connect Warpcast Wallet' : 'Connect Wallet';
   };
 
   return (
