@@ -1,28 +1,28 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next';
+import { CONFIG } from '../../config';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     // Обработка взаимодействия с Frame
-    const { buttonIndex, inputText } = req.body;
+    const { buttonIndex } = req.body;
     
     if (buttonIndex === 1) {
-      // Кнопка "Купить билет"
-      res.status(200).json({
+      return res.status(200).json({
         type: 'frame',
-        frameUrl: 'https://neon-lottery.vercel.app/',
+        frameUrl: CONFIG.baseUrl,
         frameButtonText: '🎫 Buy ticket',
-        frameImageUrl: 'https://neon-lottery.vercel.app/images/ogneon.jpg',
-        framePostUrl: 'https://neon-lottery.vercel.app/api/frame'
+        frameImageUrl: `${CONFIG.baseUrl}/images/ogneon.jpg`,
+        framePostUrl: `${CONFIG.baseUrl}/api/frame`
       });
     }
-  } else {
-    // GET запрос - отображение Frame
-    res.status(200).json({
-      type: 'frame',
-      frameUrl: 'https://neon-lottery.vercel.app/',
-      frameButtonText: '🎫 Buy ticket',
-      frameImageUrl: 'https://neon-lottery.vercel.app/images/ogneon.jpg',
-      framePostUrl: 'https://neon-lottery.vercel.app/api/frame'
-    });
   }
+
+  // GET запрос - первоначальное отображение Frame
+  res.status(200).json({
+    type: 'frame',
+    frameUrl: CONFIG.baseUrl,
+    frameButtonText: '🎫 Buy ticket',
+    frameImageUrl: `${CONFIG.baseUrl}/images/ogneon.jpg`,
+    framePostUrl: `${CONFIG.baseUrl}/api/frame`
+  });
 }
