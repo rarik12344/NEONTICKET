@@ -34,13 +34,56 @@ export default function Home() {
   const [winners, setWinners] = useState<any[]>([]);
   const [notification, setNotification] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
-  // Инициализация приложения (только на клиенте)
+  // Проверка сети Base
+  const isBaseNetwork = () => {
+    if (typeof window === 'undefined') return false;
+    return isMiniApp || (window.ethereum && window.ethereum.chainId === CONFIG.baseChainId);
+  };
+
+  // Обновление цены ETH
+  const updateEthPrice = async () => {
+    try {
+      const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+      const data = await response.json();
+      setEthPrice(data.ethereum.usd);
+    } catch (error) {
+      console.error("Failed to fetch ETH price:", error);
+      setEthPrice(3000); // Fallback value
+    }
+  };
+
+  // Загрузка победителей
+  const loadWinners = async () => {
+    if (!contract) return;
+    
+    try {
+      const currentRoundIndex = (await contract.currentRoundIndex()).toNumber();
+      const winnersList = [];
+      
+      for (let i = currentRoundIndex - 1; i >= Math.max(0, currentRoundIndex - 5); i--) {
+        const round = await contract.rounds(i);
+        if (round.winner !== ethers.constants.AddressZero) {
+          winnersList.push({
+            roundIndex: i,
+            winner: round.winner,
+            prizeAmount: ethers.utils.formatEther(round.prizeAmount),
+            endTime: round.endTime.toNumber()
+          });
+        }
+      }
+      
+      setWinners(winnersList);
+    } catch (error) {
+      console.error("Error loading winners:", error);
+    }
+  };
+
+  // Инициализация приложения
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
     const initializeApp = async () => {
       try {
-        // Проверяем, запущен ли код в Warpcast MiniApp
         if (window.farcasterMiniApp) {
           setIsMiniApp(true);
           await initializeMiniApp();
@@ -48,7 +91,6 @@ export default function Home() {
           await initializeWebApp();
         }
 
-        // Инициализация Farcaster Frame (если есть SDK)
         if (window.FarcasterFrameSDK) {
           const sdk = new window.FarcasterFrameSDK();
           setFrameSdk(sdk);
@@ -65,7 +107,6 @@ export default function Home() {
 
     initializeApp();
 
-    // Очистка событий при размонтировании
     return () => {
       if (window.ethereum) {
         window.ethereum.removeAllListeners('accountsChanged');
@@ -95,7 +136,7 @@ export default function Home() {
     }
   };
 
-  // Инициализация Web3 (MetaMask и другие кошельки)
+  // Инициализация Web3 (MetaMask)
   const initializeWebApp = async () => {
     try {
       if (window.ethereum) {
@@ -133,7 +174,7 @@ export default function Home() {
     }
   };
 
-  // Проверка сети (Base)
+  // Проверка сети
   const checkNetwork = async () => {
     if (typeof window === 'undefined' || !window.ethereum) return;
     
@@ -151,7 +192,7 @@ export default function Home() {
     }
   };
 
-  // Подключение кошелька (универсальное для MiniApp и MetaMask)
+  // Подключение кошелька
   const connectWallet = async () => {
     if (!web3) return;
     
@@ -227,6 +268,28 @@ export default function Home() {
     }
   };
 
+  // Форматирование времени
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Получение оставшегося времени
+  const getRemainingTime = () => {
+    if (!currentRound) return { formatted: "00:00:00", seconds: 0 };
+    
+    const now = Math.floor(Date.now() / 1000);
+    const distance = currentRound.endTime - now;
+    const seconds = distance > 0 ? distance : 0;
+    
+    return {
+      formatted: formatTime(seconds),
+      seconds
+    };
+  };
+
   // Уведомления
   const showNotification = (message: string, type: 'success' | 'error') => {
     setNotification({ message, type });
@@ -241,27 +304,7 @@ export default function Home() {
     }
   };
 
-
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const getRemainingTime = () => {
-    if (!currentRound) return { formatted: "00:00:00", seconds: 0 };
-    
-    const now = Math.floor(Date.now() / 1000);
-    const distance = currentRound.endTime - now;
-    const seconds = distance > 0 ? distance : 0;
-    
-    return {
-      formatted: formatTime(seconds),
-      seconds
-    };
-  };
-
+  // Таймер обновления времени
   useEffect(() => {
     const timer = setInterval(() => {
       if (currentRound) {
@@ -272,11 +315,24 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [currentRound]);
 
+  // Загрузка победителей при открытии модального окна
   useEffect(() => {
     if (showModal === 'winners') {
       loadWinners();
     }
   }, [showModal]);
+
+  // Инициализация контракта при изменении web3
+  useEffect(() => {
+    if (web3) {
+      const lotteryContract = new ethers.Contract(
+        CONFIG.contractAddress,
+        CONFIG.abi,
+        web3
+      );
+      setContract(lotteryContract);
+    }
+  }, [web3]);
 
   return (
     <>
