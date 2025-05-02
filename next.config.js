@@ -1,23 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Основные настройки
   reactStrictMode: true,
   output: 'standalone',
   trailingSlash: true,
-  
-  // Поддержка изображений (для Frame и иконок)
   images: {
-    domains: [
-      'i.ibb.co', // Ваши изображения
-      'lotteryneon.vercel.app' // Для Frame-превью
-    ],
-    unoptimized: true // Для стабильной работы Frames
+    domains: ['i.ibb.co', 'lotteryneon.vercel.app'],
+    unoptimized: true
   },
-
-  // Критические заголовки
   async headers() {
     return [
-      // Для Farcaster Frame-валидации
       {
         source: '/.well-known/farcaster.json',
         headers: [
@@ -25,7 +16,6 @@ const nextConfig = {
           { key: 'Content-Type', value: 'application/json' }
         ]
       },
-      // Для MiniApp в Warpcast
       {
         source: '/:path*',
         headers: [
@@ -35,39 +25,27 @@ const nextConfig = {
           },
           { 
             key: 'Content-Security-Policy',
-            value: "frame-ancestors https://warpcast.com" 
+            value: "frame-ancestors https://warpcast.com 'self'" 
           }
         ]
       }
     ];
   },
-
-  // Переопределение API-роутов
   async rewrites() {
     return [
-      // Обработчик Frame
       {
         source: '/api/frame',
         destination: '/api/frame'
       },
-      // Вебхук для MiniApp
       {
         source: '/api/webhook',
         destination: '/api/webhook'
       },
-      // Триггеры
       {
         source: '/api/triggers/:path*',
         destination: '/api/triggers/:path*'
       }
     ];
-  },
-
-  // Конфигурация PWA (опционально)
-  pwa: {
-    dest: 'public',
-    register: true,
-    skipWaiting: true
   }
 };
 
