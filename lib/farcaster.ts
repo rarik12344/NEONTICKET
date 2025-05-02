@@ -1,26 +1,23 @@
-import { createHmac } from 'crypto';
+import { NextApiRequest } from 'next';
+import crypto from 'crypto';
 
-type WebhookRequest = {
+interface FarcasterWebhookRequest extends NextApiRequest {
   headers: {
     'x-farcaster-webhook-signature'?: string;
   };
-  body: any;
-};
+}
 
-export function verifyWebhook(req: WebhookRequest): boolean {
+export function verifyWebhook(req: FarcasterWebhookRequest, secret: string): boolean {
   const signature = req.headers['x-farcaster-webhook-signature'];
-  const secret = process.env.FARCASTER_WEBHOOK_SECRET;
   
-  if (!signature || !secret) {
-    console.error('Missing signature or secret');
+  if (!signature) {
+    console.error('Missing signature header');
     return false;
   }
 
   try {
-    const hmac = createHmac('sha256', secret);
+    const hmac = crypto.createHmac('sha256', secret);
     const digest = hmac.update(JSON.stringify(req.body)).digest('hex');
-    
-    // Сравнение строк вместо Buffer
     return signature === digest;
   } catch (error) {
     console.error('Error verifying webhook:', error);
@@ -28,13 +25,15 @@ export function verifyWebhook(req: WebhookRequest): boolean {
   }
 }
 
+export type FrameButton = {
+  label: string;
+  action: 'post' | 'link';
+  target?: string;
+};
+
 export function generateFrameResponse(
   imageUrl: string,
-  buttons: Array<{
-    label: string;
-    action: 'post' | 'link';
-    target?: string;
-  }>,
+  buttons: FrameButton[],
   postUrl: string
 ) {
   return {
