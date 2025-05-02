@@ -1,9 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Базовые настройки
   reactStrictMode: true,
+  output: 'export', // Критически важно для Vercel
+  
+  // Настройки изображений
   images: {
-    domains: ['i.ibb.co'],
+    unoptimized: true, // Обязательно при output: 'export'
+    domains: ['i.ibb.co'], // Ваши домены для изображений
+    loader: 'custom', // Для статического экспорта
   },
+
+  // Настройки заголовков
   async headers() {
     return [
       {
@@ -19,7 +27,7 @@ const nextConfig = {
           },
         ],
       },
-      // Добавляем базовые security headers
+      // Безопасность
       {
         source: '/(.*)',
         headers: [
@@ -35,17 +43,18 @@ const nextConfig = {
       },
     ];
   },
-  // Для корректного развертывания на Vercel
-  output: 'standalone',
-  // Переписываем пути для SPA, если нужно
-  async rewrites() {
-    return [
-      {
-        source: '/:path*',
-        destination: '/',
-      },
-    ];
+
+  // Отключаем ненужные функции для статического экспорта
+  experimental: {
+    appDir: false,
+    outputFileTracingExcludes: {
+      '*': ['node_modules/**/*'],
+    },
   },
+
+  // Настройки для Vercel
+  trailingSlash: true, // Важно для корректных URL
+  skipTrailingSlashRedirect: true, // Отключаем редиректы
 };
 
 module.exports = nextConfig;
