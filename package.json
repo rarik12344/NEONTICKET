@@ -4,11 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && next export",
-    "vercel-build": "next build && next export",
+    "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "export": "next export"
+    "lint": "next lint"
   },
   "dependencies": {
     "@farcaster/frame-sdk": "^0.0.37",
@@ -24,4 +22,3 @@
     "@types/react": "^18.2.18",
     "@types/react-dom": "^18.2.7"
   }
-}
