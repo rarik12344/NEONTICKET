@@ -4,6 +4,9 @@ import { ethers } from 'ethers';
 import { CONFIG } from '../config';
 import styles from '../styles/Home.module.css';
 
+// Создаем общий тип для провайдера
+type Web3ProviderType = ethers.providers.Web3Provider | ethers.providers.JsonRpcProvider | null;
+
 declare global {
   interface Window {
     farcasterMiniApp?: {
@@ -21,7 +24,7 @@ declare global {
 }
 
 export default function Home() {
-  const [web3, setWeb3] = useState<ethers.providers.Web3Provider | null>(null);
+  const [web3, setWeb3] = useState<Web3ProviderType>(null);
   const [contract, setContract] = useState<ethers.Contract | null>(null);
   const [account, setAccount] = useState<string | null>(null);
   const [isMiniApp, setIsMiniApp] = useState(false);
@@ -162,12 +165,14 @@ export default function Home() {
           }
         });
       } else {
+        // Используем JsonRpcProvider как fallback
         const provider = new ethers.providers.JsonRpcProvider(CONFIG.baseRpcUrl);
         setWeb3(provider);
         showNotification("Web3 wallet not detected", "error");
       }
     } catch (error) {
       console.error("Web3 initialization error:", error);
+      // Используем JsonRpcProvider как fallback
       const provider = new ethers.providers.JsonRpcProvider(CONFIG.baseRpcUrl);
       setWeb3(provider);
       showNotification("Failed to connect to wallet", "error");
@@ -218,7 +223,7 @@ export default function Home() {
 
   // Покупка билетов
   const buyTickets = async () => {
-    if (!contract || !account) return;
+    if (!contract || !account || !web3) return;
     
     try {
       const ticketPriceWei = await contract.ticketPriceETH();
@@ -233,7 +238,7 @@ export default function Home() {
           chainId: CONFIG.baseChainId
         });
         showNotification(`Tickets purchased! TX: ${txHash.slice(0, 10)}...`, "success");
-      } else if (window.ethereum) {
+      } else if (web3 instanceof ethers.providers.Web3Provider) {
         const signer = web3.getSigner();
         const tx = await contract.connect(signer).buyTickets(ticketAmount, { value: costWei });
         await tx.wait();
