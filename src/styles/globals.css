@@ -1,1 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+@layer utilities {
+  .text-shadow-neon-blue {
+    text-shadow: 0 0 12px rgba(0, 243, 255, 0.4);
+  }
+  .text-shadow-neon-pink {
+    text-shadow: 0 0 12px rgba(255, 0, 255, 0.4);
+  }
+  .shadow-neon-blue {
+    box-shadow: 0 0 20px rgba(0, 243, 255, 0.3);
+  }
+  .shadow-neon-pink {
+    box-shadow: 0 0 20px rgba(255, 0, 255, 0.3);
+  }
+  .shadow-neon-purple {
+    box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
+  }
+  .shadow-success {
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.5);
+  }
+  .shadow-error {
+    box-shadow: 0 0 20px rgba(255, 85, 85, 0.5);
+  }
+}
+
+body {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: touch;
+}
