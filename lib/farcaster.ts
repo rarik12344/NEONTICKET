@@ -9,9 +9,10 @@ export function verifyWebhook(req: any): boolean {
   const hmac = crypto.createHmac('sha256', secret);
   const digest = hmac.update(JSON.stringify(req.body)).digest('hex');
   
+  // Исправленная версия сравнения
   return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(digest)
+    Buffer.from(signature, 'utf8'),
+    Buffer.from(digest, 'hex')
   );
 }
 
