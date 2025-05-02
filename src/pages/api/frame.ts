@@ -1,50 +1,48 @@
-import { NextApiRequest, NextApiResponse } from 'next'
-import { CONFIG } from '../../config'
+import { NextApiRequest, NextApiResponse } from 'next';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
-    // Обработка POST-запроса от Frame
-    const { untrustedData } = req.body
-    
+    // Handle frame interaction
+    const { buttonIndex, inputText, state } = req.body;
+
+    // Return frame response
     res.status(200).json({
       type: 'frame',
       frame: {
-        version: CONFIG.frameVersion,
-        imageUrl: CONFIG.frameImageUrl,
+        version: 'next',
+        imageUrl: 'https://i.ibb.co/HfcPqDfC/ogneon.jpg',
         buttons: [
           {
-            title: "🎫 Buy ticket",
-            action: {
-              type: "launch_frame",
-              url: "https://lotteryneon.vercel.app/",
-              name: "Neon Lottery",
-              splashImageUrl: CONFIG.splashImageUrl,
-              splashBackgroundColor: CONFIG.splashBackgroundColor
-            }
-          }
-        ]
-      }
-    })
+            label: 'Buy Ticket',
+            action: 'post',
+          },
+          {
+            label: 'View Winners',
+            action: 'post_redirect',
+          },
+        ],
+        postUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/frame`,
+      },
+    });
   } else {
-    // Обработка GET-запроса
+    // Return initial frame
     res.status(200).json({
       type: 'frame',
       frame: {
-        version: CONFIG.frameVersion,
-        imageUrl: CONFIG.frameImageUrl,
+        version: 'next',
+        imageUrl: 'https://i.ibb.co/HfcPqDfC/ogneon.jpg',
         buttons: [
           {
-            title: "🎫 Buy ticket",
-            action: {
-              type: "launch_frame",
-              url: "https://lotteryneon.vercel.app/",
-              name: "Neon Lottery",
-              splashImageUrl: CONFIG.splashImageUrl,
-              splashBackgroundColor: CONFIG.splashBackgroundColor
-            }
-          }
-        ]
-      }
-    })
+            label: '🎫 Buy Ticket',
+            action: 'post',
+          },
+          {
+            label: '🏆 Winners',
+            action: 'post_redirect',
+          },
+        ],
+        postUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/api/frame`,
+      },
+    });
   }
 }
