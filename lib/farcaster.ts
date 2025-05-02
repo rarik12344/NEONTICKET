@@ -1,26 +1,46 @@
-import crypto from 'crypto';
+import { createHmac } from 'crypto';
 
-export function verifyWebhook(req: any): boolean {
+type WebhookRequest = {
+  headers: {
+    'x-farcaster-webhook-signature'?: string;
+  };
+  body: any;
+};
+
+export function verifyWebhook(req: WebhookRequest): boolean {
   const signature = req.headers['x-farcaster-webhook-signature'];
   const secret = process.env.FARCASTER_WEBHOOK_SECRET;
   
-  if (!signature || !secret) return false;
+  if (!signature || !secret) {
+    console.error('Missing signature or secret');
+    return false;
+  }
 
-  const hmac = crypto.createHmac('sha256', secret);
-  const digest = hmac.update(JSON.stringify(req.body)).digest('hex');
-  
-  // Исправленная версия сравнения
-  return crypto.timingSafeEqual(
-    Buffer.from(signature, 'utf8'),
-    Buffer.from(digest, 'hex')
-  );
+  try {
+    const hmac = createHmac('sha256', secret);
+    const digest = hmac.update(JSON.stringify(req.body)).digest('hex');
+    
+    // Сравнение строк вместо Buffer
+    return signature === digest;
+  } catch (error) {
+    console.error('Error verifying webhook:', error);
+    return false;
+  }
 }
 
-export function generateFrameResponse(imageUrl: string, buttons: any[], postUrl: string) {
+export function generateFrameResponse(
+  imageUrl: string,
+  buttons: Array<{
+    label: string;
+    action: 'post' | 'link';
+    target?: string;
+  }>,
+  postUrl: string
+) {
   return {
-    type: 'frame',
+    type: 'frame' as const,
     frame: {
-      version: 'vNext',
+      version: 'vNext' as const,
       image: imageUrl,
       buttons,
       postUrl
