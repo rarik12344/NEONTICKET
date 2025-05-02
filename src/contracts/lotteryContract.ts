@@ -7,8 +7,6 @@ export const useLotteryContract = (contractAddress: Address): Lottery => {
     address: contractAddress,
     abi: ABI,
     functionName: 'buyTickets',
-    args: [Number(ticketAmount)], // Изменено с BigInt на Number
-    value: Number(ticketPrice) * ticketAmount, // Изменено с BigInt на Number
   });
 
   const { config: cancelRoundConfig } = usePrepareContractWrite({
@@ -28,11 +26,13 @@ export const useLotteryContract = (contractAddress: Address): Lottery => {
   const { write: claimPrize } = useContractWrite(claimPrizeConfig);
 
   return {
-    buyTickets: (ticketAmount: number, ticketPrice: number) => buyTickets?.({
-      args: [Number(ticketAmount)], // Изменено с BigInt на Number
-      value: Number(ticketPrice) * ticketAmount, // Изменено с BigInt на Number
-    }),
-    cancelRound,
-    claimPrize,
+    buyTickets: (ticketAmount: number, ticketPrice: number) => {
+      return buyTickets?.({
+        args: [ticketAmount],
+        value: BigInt(Math.floor(ticketPrice * ticketAmount)),
+      });
+    },
+    cancelRound: () => cancelRound?.(),
+    claimPrize: () => claimPrize?.(),
   };
 };
