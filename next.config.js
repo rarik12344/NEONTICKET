@@ -1,60 +1,38 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Базовые настройки
   reactStrictMode: true,
-  output: 'export', // Критически важно для Vercel
+  output: 'export',
+  distDir: 'out',
+  trailingSlash: true,
   
-  // Настройки изображений
   images: {
-    unoptimized: true, // Обязательно при output: 'export'
-    domains: ['i.ibb.co'], // Ваши домены для изображений
-    loader: 'custom', // Для статического экспорта
+    unoptimized: true,
+    domains: ['i.ibb.co'],
   },
 
-  // Настройки заголовков
   async headers() {
     return [
       {
         source: '/.well-known/farcaster.json',
         headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Content-Type',
-            value: 'application/json',
-          },
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Content-Type', value: 'application/json' }
         ],
-      },
-      // Безопасность
-      {
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-        ],
-      },
+      }
     ];
   },
 
-  // Отключаем ненужные функции для статического экспорта
+  // Отключаем несовместимые функции для статического экспорта
   experimental: {
     appDir: false,
     outputFileTracingExcludes: {
       '*': ['node_modules/**/*'],
     },
   },
-
-  // Настройки для Vercel
-  trailingSlash: true, // Важно для корректных URL
-  skipTrailingSlashRedirect: true, // Отключаем редиректы
+  
+  // Фикс для API routes в статическом экспорте
+  skipMiddlewareUrlNormalize: true,
+  skipTrailingSlashRedirect: true
 };
 
 module.exports = nextConfig;
