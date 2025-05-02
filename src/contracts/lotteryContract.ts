@@ -1,52 +1,38 @@
-import { ABI, CONFIG } from '@/config/constants';
-import { useReadContract, useWriteContract } from 'wagmi';
+import { Lottery } from '@/types';
+import ABI from './lottery-abi.json';
+import { Address, useContractWrite, usePrepareContractWrite } from 'wagmi';
 
-export const useLotteryContract = () => {
-  // Read contract data
-  const { data: currentRoundIndex } = useReadContract({
-    address: CONFIG.CONTRACT_ADDRESS,
+export const useLotteryContract = (contractAddress: Address): Lottery => {
+  const { config: buyTicketsConfig } = usePrepareContractWrite({
+    address: contractAddress,
     abi: ABI,
-    functionName: 'currentRoundIndex',
+    functionName: 'buyTickets',
+    args: [Number(ticketAmount)], // Изменено с BigInt на Number
+    value: Number(ticketPrice) * ticketAmount, // Изменено с BigInt на Number
   });
 
-  const { data: roundInfo, refetch: refetchRoundInfo } = useReadContract({
-    address: CONFIG.CONTRACT_ADDRESS,
+  const { config: cancelRoundConfig } = usePrepareContractWrite({
+    address: contractAddress,
     abi: ABI,
-    functionName: 'getCurrentRoundInfo',
+    functionName: 'cancelRound',
   });
 
-  const { data: ticketPrice } = useReadContract({
-    address: CONFIG.CONTRACT_ADDRESS,
+  const { config: claimPrizeConfig } = usePrepareContractWrite({
+    address: contractAddress,
     abi: ABI,
-    functionName: 'ticketPriceETH',
+    functionName: 'claimPrize',
   });
 
-  // Write functions
-  const { writeContract: buyTickets } = useWriteContract();
-  const { writeContract: cancelRound } = useWriteContract();
-  const { writeContract: endRound } = useWriteContract();
+  const { write: buyTickets } = useContractWrite(buyTicketsConfig);
+  const { write: cancelRound } = useContractWrite(cancelRoundConfig);
+  const { write: claimPrize } = useContractWrite(claimPrizeConfig);
 
   return {
-    currentRoundIndex,
-    roundInfo,
-    ticketPrice,
-    buyTickets: (ticketAmount: number) => buyTickets({
-      address: CONFIG.CONTRACT_ADDRESS,
-      abi: ABI,
-      functionName: 'buyTickets',
-      args: [BigInt(ticketAmount)],
-      value: BigInt(Number(ticketPrice) * ticketAmount),
+    buyTickets: (ticketAmount: number, ticketPrice: number) => buyTickets?.({
+      args: [Number(ticketAmount)], // Изменено с BigInt на Number
+      value: Number(ticketPrice) * ticketAmount, // Изменено с BigInt на Number
     }),
-    cancelRound: () => cancelRound({
-      address: CONFIG.CONTRACT_ADDRESS,
-      abi: ABI,
-      functionName: 'cancelRound',
-    }),
-    endRound: () => endRound({
-      address: CONFIG.CONTRACT_ADDRESS,
-      abi: ABI,
-      functionName: 'endRound',
-    }),
-    refetchRoundInfo,
+    cancelRound,
+    claimPrize,
   };
 };
