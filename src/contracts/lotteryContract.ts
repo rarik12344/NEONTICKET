@@ -1,58 +1,52 @@
 import { ABI, CONFIG } from '@/config/constants';
-import { useContractRead, usePrepareContractWrite } from 'wagmi';
+import { useReadContract, useWriteContract } from 'wagmi';
 
 export const useLotteryContract = () => {
   // Read contract data
-  const { data: currentRoundIndex } = useContractRead({
+  const { data: currentRoundIndex } = useReadContract({
     address: CONFIG.CONTRACT_ADDRESS,
     abi: ABI,
     functionName: 'currentRoundIndex',
   });
 
-  const { data: roundInfo, refetch: refetchRoundInfo } = useContractRead({
+  const { data: roundInfo, refetch: refetchRoundInfo } = useReadContract({
     address: CONFIG.CONTRACT_ADDRESS,
     abi: ABI,
     functionName: 'getCurrentRoundInfo',
-    watch: true,
   });
 
-  const { data: ticketPrice } = useContractRead({
+  const { data: ticketPrice } = useReadContract({
     address: CONFIG.CONTRACT_ADDRESS,
     abi: ABI,
     functionName: 'ticketPriceETH',
   });
 
-  // Prepare write functions
-  const { config: buyTicketsConfig } = usePrepareContractWrite({
-    address: CONFIG.CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'buyTickets',
-  });
-
-  const { config: cancelRoundConfig } = usePrepareContractWrite({
-    address: CONFIG.CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'cancelRound',
-  });
-
-  const { config: endRoundConfig } = usePrepareContractWrite({
-    address: CONFIG.CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'endRound',
-  });
+  // Write functions
+  const { writeContract: buyTickets } = useWriteContract();
+  const { writeContract: cancelRound } = useWriteContract();
+  const { writeContract: endRound } = useWriteContract();
 
   return {
     currentRoundIndex,
     roundInfo,
     ticketPrice,
-    buyTicketsConfig,
-    cancelRoundConfig,
-    endRoundConfig,
+    buyTickets: (ticketAmount: number) => buyTickets({
+      address: CONFIG.CONTRACT_ADDRESS,
+      abi: ABI,
+      functionName: 'buyTickets',
+      args: [BigInt(ticketAmount)],
+      value: BigInt(Number(ticketPrice) * ticketAmount),
+    }),
+    cancelRound: () => cancelRound({
+      address: CONFIG.CONTRACT_ADDRESS,
+      abi: ABI,
+      functionName: 'cancelRound',
+    }),
+    endRound: () => endRound({
+      address: CONFIG.CONTRACT_ADDRESS,
+      abi: ABI,
+      functionName: 'endRound',
+    }),
     refetchRoundInfo,
   };
 };
-
-export const getContractConfig = () => ({
-  address: CONFIG.CONTRACT_ADDRESS,
-  abi: ABI,
-});
