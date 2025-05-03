@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import { useState, useEffect } from 'react';
-import { useAccount, useContractRead, useContractWrite, usePrepareContractWrite } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { Address } from 'viem';
 import { Countdown } from '@/components/Countdown';
 import { Modal } from '@/components/Modal';
 import { useEthPrice } from '@/hooks/useEthPrice';
