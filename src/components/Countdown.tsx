@@ -1,39 +1,37 @@
-import React from 'react';
+import { useCountdown } from '@/hooks/useCountdown';
 
 interface CountdownProps {
-  endTime: number;
+  targetDate: Date | null;
+  onComplete?: () => void;
 }
 
-export const Countdown: React.FC<CountdownProps> = ({ endTime }) => {
-  const [timeLeft, setTimeLeft] = React.useState<string>('00:00:00');
+export const Countdown = ({ targetDate, onComplete }: CountdownProps) => {
+  const { days, hours, minutes, seconds } = useCountdown(targetDate);
 
-  React.useEffect(() => {
-    const updateCountdown = () => {
-      const now = Math.floor(Date.now() / 1000);
-      const distance = endTime - now;
-
-      if (distance < 0) {
-        setTimeLeft('00:00:00');
-        return;
-      }
-
-      const hours = Math.floor(distance / 3600);
-      const minutes = Math.floor((distance % 3600) / 60);
-      const seconds = Math.floor(distance % 60);
-
-      setTimeLeft(
-        `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
-      );
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, [endTime]);
+  useEffect(() => {
+    if (days === 0 && hours === 0 && minutes === 0 && seconds === 0 && onComplete) {
+      onComplete();
+    }
+  }, [days, hours, minutes, seconds, onComplete]);
 
   return (
-    <div className="timer text-4xl md:text-5xl font-bold text-neon-pink text-shadow-neon-pink font-mono tracking-wider">
-      {timeLeft}
+    <div className="flex gap-2">
+      <div className="text-center">
+        <div className="text-2xl font-bold">{days}</div>
+        <div className="text-sm">Days</div>
+      </div>
+      <div className="text-center">
+        <div className="text-2xl font-bold">{hours}</div>
+        <div className="text-sm">Hours</div>
+      </div>
+      <div className="text-center">
+        <div className="text-2xl font-bold">{minutes}</div>
+        <div className="text-sm">Minutes</div>
+      </div>
+      <div className="text-center">
+        <div className="text-2xl font-bold">{seconds}</div>
+        <div className="text-sm">Seconds</div>
+      </div>
     </div>
   );
 };
