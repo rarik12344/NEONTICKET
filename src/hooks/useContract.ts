@@ -12,7 +12,7 @@ interface RoundInfo {
 export const useLotteryContract = () => {
   const { writeContract } = useWriteContract();
 
-  // Чтение данных с контракта
+  // Чтение данных
   const { data: currentRound } = useReadContract({
     address: CONFIG.CONTRACT_ADDRESS,
     abi: ABI,
@@ -39,7 +39,7 @@ export const useLotteryContract = () => {
       address: CONFIG.CONTRACT_ADDRESS,
       abi: ABI,
       functionName: 'buyTickets',
-      args: [ticketAmount], // Передаем как number (если контракт ожидает uint256, нужно BigInt)
+      args: [BigInt(ticketAmount)],
       value: BigInt(ticketAmount) * BigInt(ticketPrice as bigint),
     });
   };
