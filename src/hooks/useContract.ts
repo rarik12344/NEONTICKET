@@ -1,62 +1,70 @@
-import { useState, useEffect } from 'react';
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
-import { ABI, CONFIG } from '@/config/constants';
+import { CONFIG, ABI } from '@/config/constants';
 import { Address } from 'viem';
 
 export const useLotteryContract = () => {
   const { address } = useAccount();
   const { writeContract } = useWriteContract();
-  
-  // Пример использования useReadContract
+
+  // Чтение данных с контракта
   const { data: currentRound } = useReadContract({
     abi: ABI,
-    address: CONFIG.contractAddress,
+    address: CONFIG.CONTRACT_ADDRESS,
     functionName: 'currentRoundIndex',
   });
 
-  const buyTickets = async (ticketAmount: number, ticketPrice: bigint) => {
-    try {
-      await writeContract({
-        address: CONFIG.contractAddress,
-        abi: ABI,
-        functionName: 'buyTickets',
-        args: [BigInt(ticketAmount)],
-        value: ticketPrice * BigInt(ticketAmount),
-      });
-    } catch (error) {
-      console.error('Error buying tickets:', error);
-    }
+  const { data: ticketPrice } = useReadContract({
+    abi: ABI,
+    address: CONFIG.CONTRACT_ADDRESS,
+    functionName: 'ticketPriceETH',
+  });
+
+  const { data: roundInfo } = useReadContract({
+    abi: ABI,
+    address: CONFIG.CONTRACT_ADDRESS,
+    functionName: 'getCurrentRoundInfo',
+  });
+
+  // Запись в контракт
+  const buyTickets = async (ticketAmount: number) => {
+    if (!ticketPrice) return;
+    
+    const totalPrice = BigInt(ticketAmount) * ticketPrice;
+    return writeContract({
+      address: CONFIG.CONTRACT_ADDRESS,
+      abi: ABI,
+      functionName: 'buyTickets',
+      args: [ticketAmount],
+      value: totalPrice,
+    });
   };
 
-  const cancelRound = async () => {
-    try {
-      await writeContract({
-        address: CONFIG.contractAddress,
-        abi: ABI,
-        functionName: 'cancelRound',
-      });
-    } catch (error) {
-      console.error('Error canceling round:', error);
-    }
-  };
+  const cancelRound = () => writeContract({
+    address: CONFIG.CONTRACT_ADDRESS,
+    abi: ABI,
+    functionName: 'cancelRound',
+  });
 
-  const endRound = async () => {
-    try {
-      await writeContract({
-        address: CONFIG.contractAddress,
-        abi: ABI,
-        functionName: 'endRound',
-      });
-    } catch (error) {
-      console.error('Error ending round:', error);
-    }
-  };
+  const endRound = () => writeContract({
+    address: CONFIG.CONTRACT_ADDRESS,
+    abi: ABI,
+    functionName: 'endRound',
+  });
+
+  const startRound = () => writeContract({
+    address: CONFIG.CONTRACT_ADDRESS,
+    abi: ABI,
+    functionName: 'startRound',
+  });
 
   return {
     address,
     currentRound,
+    ticketPrice,
+    roundInfo,
     buyTickets,
     cancelRound,
     endRound,
+    startRound,
   };
 };
