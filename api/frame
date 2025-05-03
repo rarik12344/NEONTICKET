@@ -1,0 +1,24 @@
+// pages/api/frame.ts
+import { NextApiRequest, NextApiResponse } from 'next';
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method === 'POST') {
+    // Process frame interaction
+    const body = req.body;
+    
+    // Validate and process
+    res.setHeader('Content-Type', 'text/html');
+    res.status(200).send(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta property="fc:frame" content="vNext" />
+          <meta property="fc:frame:image" content="${process.env.NEXT_PUBLIC_BASE_URL}/api/image" />
+          <!-- Additional frame tags -->
+        </head>
+      </html>
+    `);
+  } else {
+    res.status(405).end();
+  }
+}
