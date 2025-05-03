@@ -1,35 +1,27 @@
-import React from 'react';
+import { Dialog } from '@radix-ui/react-dialog';
+import { ReactNode } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
-export const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
-  if (!isOpen) return null;
-
+export const Modal = ({ isOpen, onClose, title, children }: ModalProps) => {
   return (
-    <div 
-      className="fixed inset-0 bg-black bg-opacity-90 flex justify-center items-center z-50 backdrop-blur-sm overflow-y-auto p-5"
-      onClick={onClose}
-    >
-      <div 
-        className="bg-card-bg rounded-2xl p-6 w-full max-w-md relative border border-white/10 shadow-lg shadow-neon-blue/30 animate-modalFadeIn"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button 
-          className="absolute top-4 right-4 text-neon-pink text-2xl w-9 h-9 flex items-center justify-center rounded-full hover:bg-white/10 transition-transform hover:rotate-90"
-          onClick={onClose}
-        >
-          &times;
-        </button>
-        <h2 className="text-xl md:text-2xl font-semibold text-neon-blue mb-5 flex items-center justify-center gap-2">
-          {title}
-        </h2>
-        {children}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-bold">{title}</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              ×
+            </button>
+          </div>
+          <div>{children}</div>
+        </div>
       </div>
-    </div>
+    </Dialog>
   );
 };
