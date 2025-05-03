@@ -7,8 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "clean": "rimraf node_modules .next",
-    "postinstall": "npm run build"
+    "clean": "rimraf node_modules .next"
   },
   "dependencies": {
     "@farcaster/frame-sdk": "^0.0.37",
@@ -25,7 +24,6 @@
     "clsx": "^2.1.0",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
-    "lru-cache": "^10.0.0",
     "qrcode": "^1.5.3"
   },
   "devDependencies": {
@@ -36,14 +34,10 @@
     "eslint-config-next": "^14.1.0",
     "rimraf": "^5.0.5",
     "typescript": "^5.3.3",
-    "@eslint/config-array": "^0.11.0",
-    "glob": "^10.3.10"
+    "lru-cache": "^10.0.0"
   },
   "resolutions": {
     "inflight": "npm:lru-cache@^10.0.0",
-    "@paulmillr/qr": "npm:qrcode@^1.5.3",
-    "@humanwhocodes/config-array": "npm:@eslint/config-array@^0.11.0",
-    "rimraf": "^5.0.5",
-    "glob": "^10.3.10"
+    "@paulmillr/qr": "npm:qrcode@^1.5.3"
   }
 }
