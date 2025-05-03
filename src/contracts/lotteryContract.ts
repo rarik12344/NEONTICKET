@@ -1,38 +1,32 @@
 import { Lottery } from '@/types';
 import ABI from './lottery-abi.json';
-import { Address, useContractWrite, usePrepareContractWrite } from 'wagmi';
+import { useWriteContract } from 'wagmi';
+import { Address } from 'viem';
 
 export const useLotteryContract = (contractAddress: Address): Lottery => {
-  const { config: buyTicketsConfig } = usePrepareContractWrite({
-    address: contractAddress,
-    abi: ABI,
-    functionName: 'buyTickets',
-  });
-
-  const { config: cancelRoundConfig } = usePrepareContractWrite({
-    address: contractAddress,
-    abi: ABI,
-    functionName: 'cancelRound',
-  });
-
-  const { config: claimPrizeConfig } = usePrepareContractWrite({
-    address: contractAddress,
-    abi: ABI,
-    functionName: 'endRound', // Изменил на endRound согласно ABI
-  });
-
-  const { write: buyTickets } = useContractWrite(buyTicketsConfig);
-  const { write: cancelRound } = useContractWrite(cancelRoundConfig);
-  const { write: claimPrize } = useContractWrite(claimPrizeConfig);
+  const { writeContract: buyTickets } = useWriteContract();
+  const { writeContract: cancelRound } = useWriteContract();
+  const { writeContract: endRound } = useWriteContract();
 
   return {
     buyTickets: (ticketAmount: number, ticketPrice: number) => {
-      return buyTickets?.({
-        args: [ticketAmount],
+      return buyTickets({
+        address: contractAddress,
+        abi: ABI,
+        functionName: 'buyTickets',
+        args: [BigInt(ticketAmount)],
         value: BigInt(Math.floor(ticketPrice * ticketAmount)),
       });
     },
-    cancelRound: () => cancelRound?.(),
-    claimPrize: () => claimPrize?.(),
+    cancelRound: () => cancelRound({
+      address: contractAddress,
+      abi: ABI,
+      functionName: 'cancelRound',
+    }),
+    claimPrize: () => endRound({
+      address: contractAddress,
+      abi: ABI,
+      functionName: 'endRound',
+    }),
   };
 };
