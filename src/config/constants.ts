@@ -1,5 +1,7 @@
+import { Address } from 'viem';
+
 export const CONFIG = {
-  CONTRACT_ADDRESS: "0x6927648b3114B8B54FA5476Ec3BC3A52f1ab513B" as `0x${string}`,
+  CONTRACT_ADDRESS: "0x6927648b3114B8B54FA5476Ec3BC3A52f1ab513B" as Address,
   BASE_CHAIN_ID: '0x2105',
   BASE_RPC_URL: 'https://mainnet.base.org',
   BASE_EXPLORER_URL: 'https://basescan.org',
