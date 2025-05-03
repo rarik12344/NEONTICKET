@@ -12,8 +12,8 @@ export const useLotteryContract = () => {
     functionName: 'currentRoundIndex',
   });
 
-  // Чтение цены билета
-  const { data: ticketPrice } = useReadContract({
+  // Чтение цены билета (явно указываем тип bigint)
+  const { data: ticketPrice } = useReadContract<bigint>({
     address: CONFIG.CONTRACT_ADDRESS,
     abi: ABI,
     functionName: 'ticketPriceETH',
@@ -26,7 +26,7 @@ export const useLotteryContract = () => {
     functionName: 'getCurrentRoundInfo',
   });
 
-  // Покупка билетов
+  // Покупка билетов (с проверкой типов)
   const buyTickets = async (ticketAmount: number) => {
     if (!ticketPrice) return;
     
@@ -35,7 +35,7 @@ export const useLotteryContract = () => {
       abi: ABI,
       functionName: 'buyTickets',
       args: [BigInt(ticketAmount)],
-      value: BigInt(ticketAmount) * ticketPrice,
+      value: BigInt(ticketAmount) * BigInt(ticketPrice),
     });
   };
 
@@ -67,8 +67,8 @@ export const useLotteryContract = () => {
   };
 
   return {
-    currentRound,
-    ticketPrice,
+    currentRound: currentRound as bigint | undefined,
+    ticketPrice: ticketPrice as bigint | undefined,
     roundInfo,
     buyTickets,
     cancelRound,
