@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["ES2020", "DOM"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,13 +13,25 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["node"],
+    "types": ["node", "@vercel/og/types"],
     "resolveJsonModule": true,
     "isolatedModules": true,
     "allowJs": true,
     "noEmit": true,
-    "incremental": true
+    "incremental": true,
+    "noUncheckedIndexedAccess": true,
+    "strictNullChecks": true,
+    "types": ["node", "@vercel/og/types"]
   },
-  "include": ["**/*.ts", "**/*.tsx", "**/*.json"],
-  "exclude": ["node_modules"]
+  "include": [
+    "**/*.ts", 
+    "**/*.tsx", 
+    "**/*.json",
+    "next-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }
