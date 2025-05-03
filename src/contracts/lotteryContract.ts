@@ -18,7 +18,7 @@ export const useLotteryContract = (contractAddress: Address): Lottery => {
   const { config: claimPrizeConfig } = usePrepareContractWrite({
     address: contractAddress,
     abi: ABI,
-    functionName: 'claimPrize',
+    functionName: 'endRound', // Изменил на endRound согласно ABI
   });
 
   const { write: buyTickets } = useContractWrite(buyTicketsConfig);
