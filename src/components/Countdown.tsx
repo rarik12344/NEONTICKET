@@ -1,9 +1,21 @@
-import { useCountdown } from '@/hooks/useCountdown';
+import { useEffect } from 'react';
 
 interface CountdownProps {
-  targetDate: Date | null;
+  targetDate: Date;
   onComplete?: () => void;
 }
+
+const useCountdown = (targetDate: Date) => {
+  const now = new Date().getTime();
+  const distance = targetDate.getTime() - now;
+
+  const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((distance % (1000 * 60)) / 1000;
+
+  return { days, hours, minutes, seconds };
+};
 
 export const Countdown = ({ targetDate, onComplete }: CountdownProps) => {
   const { days, hours, minutes, seconds } = useCountdown(targetDate);
@@ -15,23 +27,11 @@ export const Countdown = ({ targetDate, onComplete }: CountdownProps) => {
   }, [days, hours, minutes, seconds, onComplete]);
 
   return (
-    <div className="flex gap-2">
-      <div className="text-center">
-        <div className="text-2xl font-bold">{days}</div>
-        <div className="text-sm">Days</div>
-      </div>
-      <div className="text-center">
-        <div className="text-2xl font-bold">{hours}</div>
-        <div className="text-sm">Hours</div>
-      </div>
-      <div className="text-center">
-        <div className="text-2xl font-bold">{minutes}</div>
-        <div className="text-sm">Minutes</div>
-      </div>
-      <div className="text-center">
-        <div className="text-2xl font-bold">{seconds}</div>
-        <div className="text-sm">Seconds</div>
-      </div>
+    <div className="countdown">
+      {days > 0 && <span>{days}d </span>}
+      {hours > 0 && <span>{hours}h </span>}
+      {minutes > 0 && <span>{minutes}m </span>}
+      <span>{Math.floor(seconds)}s</span>
     </div>
   );
 };
