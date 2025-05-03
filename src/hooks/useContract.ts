@@ -2,24 +2,29 @@ import { useReadContract, useWriteContract } from 'wagmi';
 import { Address } from 'viem';
 import { ABI, CONFIG } from '@/config/constants';
 
+interface RoundInfo {
+  endTime: bigint;
+  prizePool: bigint;
+  ticketsSold: bigint;
+  winner: Address;
+}
+
 export const useLotteryContract = () => {
   const { writeContract } = useWriteContract();
 
-  // Чтение текущего раунда
+  // Чтение данных с контракта
   const { data: currentRound } = useReadContract({
     address: CONFIG.CONTRACT_ADDRESS,
     abi: ABI,
     functionName: 'currentRoundIndex',
   });
 
-  // Чтение цены билета
   const { data: ticketPrice } = useReadContract({
     address: CONFIG.CONTRACT_ADDRESS,
     abi: ABI,
     functionName: 'ticketPriceETH',
   });
 
-  // Чтение информации о раунде
   const { data: roundInfo } = useReadContract({
     address: CONFIG.CONTRACT_ADDRESS,
     abi: ABI,
@@ -34,12 +39,12 @@ export const useLotteryContract = () => {
       address: CONFIG.CONTRACT_ADDRESS,
       abi: ABI,
       functionName: 'buyTickets',
-      args: [BigInt(ticketAmount)],
+      args: [ticketAmount], // Передаем как number (если контракт ожидает uint256, нужно BigInt)
       value: BigInt(ticketAmount) * BigInt(ticketPrice as bigint),
     });
   };
 
-  // Отмена раунда
+  // Административные функции
   const cancelRound = async () => {
     return writeContract({
       address: CONFIG.CONTRACT_ADDRESS,
@@ -48,7 +53,6 @@ export const useLotteryContract = () => {
     });
   };
 
-  // Завершение раунда
   const endRound = async () => {
     return writeContract({
       address: CONFIG.CONTRACT_ADDRESS,
@@ -57,7 +61,6 @@ export const useLotteryContract = () => {
     });
   };
 
-  // Старт нового раунда
   const startRound = async () => {
     return writeContract({
       address: CONFIG.CONTRACT_ADDRESS,
@@ -69,7 +72,7 @@ export const useLotteryContract = () => {
   return {
     currentRound: currentRound as bigint | undefined,
     ticketPrice: ticketPrice as bigint | undefined,
-    roundInfo,
+    roundInfo: roundInfo as RoundInfo | undefined,
     buyTickets,
     cancelRound,
     endRound,
