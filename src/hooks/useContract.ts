@@ -1,69 +1,62 @@
 import { useState, useEffect } from 'react';
-import { useAccount, useContractRead, useContractWrite, usePrepareContractWrite } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { ABI, CONFIG } from '@/config/constants';
+import { Address } from 'viem';
 
 export const useLotteryContract = () => {
   const { address } = useAccount();
-  const [currentRound, setCurrentRound] = useState<any>(null);
-  const [userTickets, setUserTickets] = useState<number>(0);
-
-  // Чтение данных контракта
-  const { data: currentRoundIndex } = useContractRead({
-    address: CONFIG.CONTRACT_ADDRESS,
+  const { writeContract } = useWriteContract();
+  
+  // Пример использования useReadContract
+  const { data: currentRound } = useReadContract({
     abi: ABI,
+    address: CONFIG.contractAddress,
     functionName: 'currentRoundIndex',
   });
 
-  const { data: roundInfo } = useContractRead({
-    address: CONFIG.CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'getCurrentRoundInfo',
-    watch: true,
-  });
-
-  const { data: ticketPrice } = useContractRead({
-    address: CONFIG.CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'ticketPriceETH',
-  });
-
-  // Подготовка транзакции покупки билетов
-  const { config: buyTicketsConfig } = usePrepareContractWrite({
-    address: CONFIG.CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'buyTickets',
-  });
-
-  const { write: buyTickets } = useContractWrite(buyTicketsConfig);
-
-  // Обновление состояния текущего раунда
-  useEffect(() => {
-    if (roundInfo) {
-      setCurrentRound({
-        endTime: Number(roundInfo[1]),
-        prizePool: roundInfo[2],
-        participantsCount: Number(roundInfo[3]),
+  const buyTickets = async (ticketAmount: number, ticketPrice: bigint) => {
+    try {
+      await writeContract({
+        address: CONFIG.contractAddress,
+        abi: ABI,
+        functionName: 'buyTickets',
+        args: [BigInt(ticketAmount)],
+        value: ticketPrice * BigInt(ticketAmount),
       });
+    } catch (error) {
+      console.error('Error buying tickets:', error);
     }
-  }, [roundInfo]);
+  };
 
-  // Получение билетов пользователя
-  useEffect(() => {
-    const fetchUserTickets = async () => {
-      if (!address || !currentRoundIndex) return;
-      
-      // Здесь должна быть логика получения билетов пользователя
-      // Это сложная операция, возможно потребуется The Graph или другой индексер
-      setUserTickets(0); // Временное значение
-    };
+  const cancelRound = async () => {
+    try {
+      await writeContract({
+        address: CONFIG.contractAddress,
+        abi: ABI,
+        functionName: 'cancelRound',
+      });
+    } catch (error) {
+      console.error('Error canceling round:', error);
+    }
+  };
 
-    fetchUserTickets();
-  }, [address, currentRoundIndex]);
+  const endRound = async () => {
+    try {
+      await writeContract({
+        address: CONFIG.contractAddress,
+        abi: ABI,
+        functionName: 'endRound',
+      });
+    } catch (error) {
+      console.error('Error ending round:', error);
+    }
+  };
 
   return {
+    address,
     currentRound,
-    ticketPrice,
-    userTickets,
     buyTickets,
+    cancelRound,
+    endRound,
   };
 };
