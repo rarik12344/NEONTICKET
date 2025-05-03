@@ -47,3 +47,124 @@ body {
   50% { transform: scale(1.05); opacity: 1; }
   100% { transform: scale(1); opacity: 0.9; }
 }
+
+.lottery-info {
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--neon-purple);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(157, 0, 255, 0.15);
+}
+
+.info-card {
+  background: rgba(20, 20, 35, 0.7);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.info-card:hover {
+  border-color: var(--neon-blue);
+  transform: translateY(-2px);
+}
+
+.info-card h3 {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.info-card p {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.text-neon-green {
+  color: var(--neon-green);
+  text-shadow: 0 0 8px rgba(0, 255, 136, 0.4);
+}
+
+.countdown-section {
+  text-align: center;
+  padding: 1rem 0;
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.countdown-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 25%;
+  right: 25%;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--neon-pink), transparent);
+}
+
+.countdown-section h2 {
+  color: var(--neon-blue);
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.text-neon-pink {
+  color: var(--neon-pink);
+  text-shadow: 0 0 8px rgba(255, 0, 255, 0.4);
+}
+
+.winner-section {
+  margin-top: 1.5rem;
+  text-align: center;
+  animation: fadeIn 0.5s ease-out;
+}
+
+.winner-section h2 {
+  color: var(--neon-green);
+  margin-bottom: 0.5rem;
+}
+
+.text-neon-blue {
+  color: var(--neon-blue);
+  text-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+}
+
+.no-active-round {
+  text-align: center;
+  padding: 2rem;
+}
+
+.no-active-round h2 {
+  color: var(--neon-purple);
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.no-active-round p {
+  color: var(--text-secondary);
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Адаптация для мобильных */
+@media (max-width: 768px) {
+  .lottery-info {
+    padding: 1rem;
+  }
+  
+  .info-card {
+    padding: 0.75rem;
+  }
+  
+  .info-card p {
+    font-size: 1rem;
+  }
+}
