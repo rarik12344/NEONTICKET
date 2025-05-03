@@ -1,74 +1,67 @@
-import React from 'react';
-import { useContractRead } from 'wagmi';
-import { ABI, CONFIG } from '@/config/constants';
 import { Countdown } from './Countdown';
 
-interface LotteryInfoProps {
-  currentRound: {
-    endTime: number;
-    prizePool: bigint;
-    participantsCount: number;
-  } | null;
-  ticketPrice: bigint | undefined;
-  userTickets: number;
-  isConnected: boolean;
+interface RoundData {
+  endTime: number; // UNIX timestamp в секундах
+  prizePool: string;
+  ticketsSold: number;
+  winnerAddress?: string;
 }
 
-export const LotteryInfo: React.FC<LotteryInfoProps> = ({
-  currentRound,
-  ticketPrice,
-  userTickets,
-  isConnected
-}) => {
-  const { data: currentRoundIndex } = useContractRead({
-    address: CONFIG.CONTRACT_ADDRESS,
-    abi: ABI,
-    functionName: 'currentRoundIndex',
-  });
+interface LotteryInfoProps {
+  currentRound?: RoundData;
+  onRoundEnd?: () => void;
+}
+
+export const LotteryInfo = ({ currentRound, onRoundEnd }: LotteryInfoProps) => {
+  // Конвертируем UNIX timestamp (секунды) в Date
+  const endDate = currentRound ? new Date(currentRound.endTime * 1000) : null;
+
+  // Проверяем, осталось ли меньше часа до конца раунда
+  const isLessThanOneHour = currentRound 
+    ? currentRound.endTime - Math.floor(Date.now() / 1000) < 3600
+    : false;
 
   return (
-    <div className="space-y-3 mb-6">
-      {currentRound ? (
-        <>
-          <Countdown endTime={currentRound.endTime} />
-          <p className={`text-sm text-center mb-5 ${
-            currentRound.endTime - Math.floor(Date.now() / 1000) < 3600 
-              ? 'text-neon-pink text-shadow-neon-pink' 
-              : 'text-text-secondary'
-          }`}>
-            {currentRound.endTime > Math.floor(Date.now() / 1000) 
-              ? 'Round Active' 
-              : 'Round Ended - Next round starting'}
-          </p>
-        </>
+    <div className="lottery-info">
+      {currentRound && endDate ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="info-card">
+              <h3>Prize Pool</h3>
+              <p className="text-neon-green">{currentRound.prizePool} ETH</p>
+            </div>
+            <div className="info-card">
+              <h3>Tickets Sold</h3>
+              <p>{currentRound.ticketsSold.toLocaleString()}</p>
+            </div>
+          </div>
+
+          <div className="countdown-section">
+            <h2>Time Remaining</h2>
+            <Countdown 
+              targetDate={endDate} 
+              onComplete={onRoundEnd} 
+            />
+            {isLessThanOneHour && (
+              <p className="text-neon-pink text-shadow-neon-pink mt-2">
+                Less than 1 hour remaining!
+              </p>
+            )}
+          </div>
+
+          {currentRound.winnerAddress && (
+            <div className="winner-section">
+              <h2>Winner</h2>
+              <p className="text-neon-blue">
+                {`${currentRound.winnerAddress.slice(0, 6)}...${currentRound.winnerAddress.slice(-4)}`}
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
-        <div className="text-center py-8">Loading round info...</div>
-      )}
-
-      <div className="flex justify-between items-center bg-black/25 p-3 rounded-xl border border-white/10 text-sm">
-        <span className="text-text-secondary flex items-center gap-1">
-          <span>🎟️ Ticket Price:</span>
-        </span>
-        <span>
-          {ticketPrice ? `${(Number(ticketPrice) / 1e18).toFixed(6)} ETH` : 'Loading...'}
-        </span>
-      </div>
-
-      <div className="flex justify-between items-center bg-black/25 p-3 rounded-xl border border-white/10 text-sm">
-        <span className="text-text-secondary flex items-center gap-1">
-          <span>💰 Current Pool:</span>
-        </span>
-        <span>
-          {currentRound?.prizePool ? `${(Number(currentRound.prizePool) / 1e18).toFixed(4)} ETH` : 'Loading...'}
-        </span>
-      </div>
-
-      {isConnected && (
-        <div className="flex justify-between items-center bg-black/25 p-3 rounded-xl border border-white/10 text-sm">
-          <span className="text-text-secondary flex items-center gap-1">
-            <span>👤 Your Tickets:</span>
-          </span>
-          <span>{userTickets}</span>
+        <div className="no-active-round">
+          <h2>No Active Round</h2>
+          <p>Check back later for the next lottery round</p>
         </div>
       )}
     </div>
