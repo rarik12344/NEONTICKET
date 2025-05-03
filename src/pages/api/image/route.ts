@@ -1,8 +1,7 @@
 import { ImageResponse } from 'next/og';
-import type { NextRequest } from 'next/server';
+import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
-export const dynamic = 'force-static'; // Оптимизация для статических изображений
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,14 +10,7 @@ export async function GET(request: NextRequest) {
     const prize = searchParams.get('prize') ?? '0.5';
     const time = searchParams.get('time') ?? '24';
 
-    // Загрузка кастомного шрифта (опционально)
-    const fontResponse = await fetch(
-      new URL('@/assets/fonts/Neon.ttf', import.meta.url)
-    );
-    const fontData = await fontResponse.arrayBuffer();
-
-    // Генерация изображения
-    const response = new ImageResponse(
+    return new ImageResponse(
       (
         <div
           style={{
@@ -31,11 +23,10 @@ export async function GET(request: NextRequest) {
             alignItems: 'center',
             backgroundImage: 'url(https://i.ibb.co/HfcPqDfC/ogneon.jpg)',
             backgroundSize: 'cover',
-            fontFamily: '"Neon"',
+            fontFamily: '"Arial"',
             position: 'relative',
           }}
         >
-          {/* Градиентный оверлей */}
           <div
             style={{
               position: 'absolute',
@@ -89,7 +80,6 @@ export async function GET(request: NextRequest) {
             </>
           )}
 
-          {/* Футер */}
           <div style={{
             position: 'absolute',
             bottom: 40,
@@ -105,24 +95,10 @@ export async function GET(request: NextRequest) {
       {
         width: 1200,
         height: 630,
-        fonts: [
-          {
-            name: 'Neon',
-            data: fontData,
-            style: 'normal',
-          },
-        ],
       }
     );
-
-    // Настройки кеширования
-    response.headers.set('Cache-Control', 'public, max-age=3600, stale-while-revalidate=600');
-    response.headers.set('Vercel-CDN-Cache-Control', 'max-age=3600');
-    response.headers.set('Vercel-Cache-Control', 'max-age=3600');
-    
-    return response;
   } catch (error) {
-    console.error('OG image generation failed:', error);
-    return new Response('Image generation failed', { status: 500 });
+    console.error('Image generation failed:', error);
+    return new Response('Failed to generate image', { status: 500 });
   }
 }
