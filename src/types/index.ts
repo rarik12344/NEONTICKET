@@ -3,3 +3,14 @@ export interface Lottery {
   cancelRound: () => void;
   claimPrize: () => void;
 }
+
+export interface RoundInfo {
+  startTime: bigint;
+  endTime: bigint;
+  prizePool: bigint;
+  participantsCount: bigint;
+  active: boolean;
+  canceled: boolean;
+  winner: Address;
+  prizeAmount: bigint;
+}
