@@ -1,3 +1,5 @@
+import { Address } from 'viem';
+
 export interface Lottery {
   buyTickets: (ticketAmount: number, ticketPrice: number) => void;
   cancelRound: () => void;
