@@ -3,11 +3,9 @@ import { NextRequest } from 'next/server';
 
 export const runtime = 'edge';
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const type = searchParams.get('type');
-  const prize = searchParams.get('prize') ?? '0.5';
-  const time = searchParams.get('time') ?? '24';
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const type = searchParams.get('type') || 'main';
 
   return new ImageResponse(
     (
@@ -20,18 +18,19 @@ export async function GET(request: NextRequest) {
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundImage: 'url(https://i.ibb.co/HfcPqDfC/ogneon.jpg)',
+          backgroundImage: `url(${CONFIG.FRAME_IMAGE_URL})`,
           backgroundSize: 'cover',
-          fontFamily: '"Arial"',
-          position: 'relative',
+          fontFamily: '"Inter"',
+          position: 'relative'
         }}
       >
+        {/* Градиентный оверлей */}
         <div
           style={{
             position: 'absolute',
             width: '100%',
             height: '100%',
-            background: 'linear-gradient(to bottom, rgba(15, 15, 26, 0.8), rgba(157, 0, 255, 0.4))',
+            background: 'linear-gradient(to bottom, rgba(15, 15, 26, 0.8), rgba(157, 0, 255, 0.4))'
           }}
         />
 
@@ -47,22 +46,18 @@ export async function GET(request: NextRequest) {
         ) : (
           <>
             <div style={{ fontSize: 64, fontWeight: 'bold', color: '#00f3ff', textShadow: '0 0 10px #00f3ff', marginBottom: 30, zIndex: 1 }}>
-              Prize Pool: {prize} ETH
+              Prize Pool: 1.25 ETH
             </div>
             <div style={{ fontSize: 48, color: '#ff00ff', textShadow: '0 0 8px #ff00ff', zIndex: 1 }}>
-              Time Left: {time} hours
+              Time Left: 4h 22m
             </div>
           </>
         )}
-
-        <div style={{ position: 'absolute', bottom: 40, right: 40, fontSize: 24, color: '#ffffff', zIndex: 1 }}>
-          neon-lottery.vercel.app
-        </div>
       </div>
     ),
     {
       width: 1200,
-      height: 630,
+      height: 630
     }
   );
 }
